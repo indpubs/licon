@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "licon"
+version = "0.1.0"
+description = "Lighting Control"
+license = "GPL-3.0-or-later"
+readme = "README.md"
+authors = ["Stephen Early <sde@individualpubs.co.uk>"]
+packages = [
+    {include = "licon"},
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+python-dali = ">=0.10"
+tomli = "^2.0"
+Jinja2 = "^3.1"
+html2text = "^2020.1.16"
+
+[tool.poetry.dev-dependencies]
+
+[tool.poetry.scripts]
+licon = "licon.cmdline:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

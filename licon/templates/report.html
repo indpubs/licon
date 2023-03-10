@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{{site.name}} Lighting Status</title>
+    <meta name="description" content="A lighting system report">
+    <style>
+      html {
+	  font-family: sans-serif;
+	  line-height: 1.15;
+      }
+      h1 {
+	  font-size: 1.5em;
+      }
+      h2 {
+	  font-size: 1.25em;
+      }
+      h3 {
+	  font-size: 1em;
+      }
+      .pass {
+          background: green;
+	  color: white;
+      }
+      .fail {
+	  background: red;
+	  color: white;
+      }
+      table td,th {
+	  padding: 0.5em;
+	  margin: 2px;
+      }
+      tbody tr th {
+	  text-align: right;
+	  vertical-align: top;
+      }
+      tbody tr td {
+	  vertical-align: top;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>{{site.name}} lighting status</h1>
+
+    <p>Report generated
+      {{site.report_time.isoformat(sep=' ', timespec='minutes')}}</p>
+
+    <h2>Summary</h2>
+
+    <table>
+      <tbody>
+	<tr>
+	  <th scope="row">Overall status:</th>
+	  {% if site.pass_ %}
+	  <td class="pass">Pass</td>
+	  {% else %}
+	  <td class="fail">Fail</td>
+	  {% endif %}
+	</tr>
+	<tr>
+	  <th scope="row">Gear status summary:</th>
+	  <td>
+	    {% for k, v in site.results.items() %}
+	    {{k}}: {{v}} unit{% if v > 1 %}s{% endif %}<br>
+	    {% endfor %}
+	  </td>
+	</tr>
+      </tbody>
+    </table>
+
+    <h2>Detail</h2>
+
+    <table>
+      <thead>
+	<tr>
+	  <th scope="col">Unit</th>
+	  <th scope="col">Status</th>
+	  <th scope="col">Details</th>
+	</tr>
+      </thead>
+      <tbody>
+	{% for gear in site.gear %}
+	<tr>
+	  <td>{{sitename}}/{{gear.busname}}/{{gear.address}}</td>
+	  <td class="{% if gear.pass_ %}pass{% else %}fail{% endif %}">
+	    {{gear.summary}}
+	  </td>
+	  <td>{% for line in gear.list_state() %}{{line}}<br>{% endfor %}</td>
+	</tr>
+	{% endfor %}
+      </tbody>
+    </table>
+    <p>Notes:</p>
+    <p>Not all of the control gear supports reporting failed lamps;
+      these will always show as "Ok". Lamps will only show as failed
+      when the test is performed at a time the lamp is supposed to be
+      illuminated.</p>
+  </body>
+</html>
