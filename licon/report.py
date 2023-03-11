@@ -87,11 +87,9 @@ class Gear:
 
         p(f"Name: {self.name}")
         if not self.present:
-            if self.related_emergency:
-                p("Emergency lighting test in progress")
-            else:
-                p("Not present")
-            return r
+            p("Not present")
+        if self.related_emergency_test:
+            p("Emergency lighting test in progress")
         if self.lamp_failure:
             p("Lamp failure")
         if self.gear_failure:
@@ -110,7 +108,8 @@ class Gear:
         rel_a = GearShort(self.related_emergency)
         em = yield QueryEmergencyMode(rel_a)
         if em.raw_value:
-            self.related_emergency = rel_a.function_test or rel_a.duration_test
+            self.related_emergency_test = \
+                rel_a.function_test or rel_a.duration_test
 
     def _read(self):
         a = GearShort(self.address)
@@ -127,7 +126,12 @@ class Gear:
             self.gear_failure = True
             return
         self.gear_failure = status.ballast_status
-        self.lamp_failure = status.lamp_failure
+        if status.lamp_failure:
+            # Lamp failure detection can be caused by the lamp being
+            # taken over by the related emergency unit.
+            yield from self._check_emergency()
+            if not self.related_emergency_test:
+                self.lamp_failure = True
 
 
 class Site:
