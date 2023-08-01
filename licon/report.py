@@ -109,7 +109,7 @@ class Gear:
         em = yield QueryEmergencyMode(rel_a)
         if em.raw_value:
             self.related_emergency_test = \
-                rel_a.function_test or rel_a.duration_test
+                em.function_test or em.duration_test
 
     def _read(self):
         a = GearShort(self.address)
