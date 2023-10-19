@@ -6,10 +6,13 @@ from dali.address import GearShort, GearGroup, GearBroadcast
 from dali.gear.general import (
     QueryControlGearPresent,
     QueryActualLevel,
+    QuerySceneLevel,
     DAPC,
     Off,
     Up,
     Down,
+    DTR0,
+    SetScene,
 )
 from dali.sequences import QueryDeviceTypes
 
@@ -46,7 +49,7 @@ class Command(metaclass=CommandTracker):
 
 
 class ListGear(Command):
-    """List all configured emergency gear"""
+    """List all configured gear"""
     command = "list"
 
     @staticmethod
@@ -91,7 +94,7 @@ class Scan(Command):
 
 
 class Check(Command):
-    """Check all configured emergency gear and output a status summary"""
+    """Check all configured gear and output a status summary"""
     command = "check"
 
     @staticmethod
@@ -232,6 +235,44 @@ class LevelCmd(_TargetCommand):
     @classmethod
     def run(cls, args):
         return cls.send_to_target(args, lambda addr: DAPC(addr, args.level))
+
+
+class DumpScenesCmd(_TargetCommand):
+    """Output the current scene configuration for the target"""
+    command = "dump-scenes"
+
+    @classmethod
+    def run(cls, args):
+        targets = cls.get_target(args, allow_multi=False)
+        if not targets:
+            return 1
+        bus, address = targets.pop()
+        assert len(targets) == 0
+        with bus as b:
+            for scene in range(16):
+                r = b.send(QuerySceneLevel(address, scene))
+                print(f"{scene:2}: {r}")
+
+
+class SetSceneCmd(_TargetCommand):
+    """Program a single scene"""
+    command = "set-scene"
+
+    @classmethod
+    def add_arguments(cls, parser):
+        super().add_arguments(parser)
+        parser.add_argument(
+            "scene", type=int,
+            help="Scene to program, in range 0..15")
+        parser.add_argument(
+            "level", type=int,
+            help="Level to program, in range 0..255 (255 means 'MASK')")
+
+    @classmethod
+    def run(cls, args):
+        cls.send_to_target(args, lambda addr: DTR0(args.level))
+        return cls.send_to_target(
+            args, lambda addr: SetScene(addr, args.scene))
 
 
 class _SimpleCommand(_TargetCommand):
