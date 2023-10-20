@@ -2,6 +2,7 @@ import argparse
 import pathlib
 import sys
 from . import report
+import json
 from dali.address import GearShort, GearGroup, GearBroadcast
 from dali.gear.general import (
     QueryControlGearPresent,
@@ -56,7 +57,7 @@ class ListGear(Command):
     def run(args):
         for sitename, site in report.sites.items():
             for gear in site.gear:
-                print(f"{sitename}/{gear.busname}/{gear.address}: {gear.name}")
+                print(f"{gear.path}: {gear.name}")
 
 
 class Scan(Command):
@@ -146,6 +147,25 @@ class Email(Command):
                     site.email_report(sitename, to=args.destination)
                 else:
                     site.email_report(sitename)
+
+
+class ExportScenesCommand(Command):
+    """Export scenes as JSON"""
+    command = "export-scenes"
+
+    @staticmethod
+    def run(args):
+        d = {}
+        for sitename, site in report.sites.items():
+            for gear in site.gear:
+                if args.verbose:
+                    print(f"{gear.path}: {gear.name}")
+                scenes = gear.read_scenes()
+                d[gear.path] = {
+                    'comment': gear.name,
+                    'scenes': scenes,
+                }
+        print(json.dumps(d, indent=2))
 
 
 class _TargetCommand(Command):

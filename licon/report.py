@@ -8,6 +8,7 @@ from html2text import html2text
 from dali.address import GearShort
 from dali.gear.general import (
     QueryControlGearPresent,
+    QuerySceneLevel,
     QueryStatus,
 )
 from dali.gear.emergency import QueryEmergencyMode
@@ -53,6 +54,10 @@ class Gear:
         self.related_emergency_test = False
         self.lamp_failure = False
         self.gear_failure = False
+
+    @property
+    def path(self):
+        return f"{self.site.key}/{self.busname}/{self.address}"
 
     @property
     def summary(self):
@@ -132,6 +137,16 @@ class Gear:
             yield from self._check_emergency()
             if not self.related_emergency_test:
                 self.lamp_failure = True
+
+    def read_scenes(self):
+        with self.bus as b:
+            a = GearShort(self.address)
+            d = {}
+            for scene in range(16):
+                r = b.send(QuerySceneLevel(a, scene))
+                if isinstance(r.value, int):
+                    d[scene] = r.value
+        return d
 
 
 class Site:
